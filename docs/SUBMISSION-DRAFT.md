@@ -1,9 +1,8 @@
 <!--
-Marketplace submission for https://plugins.omarchy.org — UNSUBMITTED DRAFT.
-Before submitting: push the repo and tag v1.0.0, strip this comment, then:
-
+Marketplace submission, unsubmitted. To send: push, then
   gh issue create --repo HANCORE-linux/omarchy-plugin-marketplace \
     --title "[Plugin]: Bandwidth" --body-file docs/SUBMISSION-DRAFT.md
+(strip this comment first)
 -->
 
 ### Repository URL
@@ -24,24 +23,26 @@ _No response_
 
 ### Maintainer notes
 
-Live download and upload in the bar; in the panel a history graph per
-direction, per-app bandwidth, the interface picker, unit systems (decimal
-bytes, bits, binary bytes) with a fixed or automatic scale, an idle threshold,
-speed-band colours taken from the active Omarchy theme, and per-direction alert
-limits. Middle-click opens btop.
+Live download and upload in the bar. The panel adds a history graph per
+direction, per app bandwidth, the interface picker, three unit systems with a
+fixed or automatic scale, an idle threshold, speed band colours taken from the
+active theme, and per direction alert limits. Middle click opens btop.
 
-Reads `/proc/net/dev` for throughput and runs `ss` to attribute traffic to
-processes. No daemon, no root, no network of its own, no compiled binaries, and
-nothing written outside the plugin folder — removal is clean.
+It reads /proc/net/dev for throughput and runs ss to attribute traffic to
+processes. No daemon, no root, no network of its own, no binaries, and nothing
+written outside its own folder.
 
-Began as a fork of csawy3r/omarchy-network-speed (MIT) and has been
-substantially rewritten: the unit systems, history graphs, hover tooltip,
-per-direction alerts, magnitude-based idle threshold, self-sizing bar columns
-and the panel layout are new. The original copyright notice is retained in
-LICENSE alongside mine, as MIT requires, and the README credits the origin.
+Named Bandwidth rather than Network so it does not collide with the
+first-party omarchy.network widget in the picker.
 
-One of a trio with omarchy-cpu and omarchy-gpu, which share the same panel
-layout and controls.
+This began as a fork of csawy3r/omarchy-network-speed (MIT) and has been
+substantially rewritten. The unit systems, history graphs, hover tooltip, alert
+limits, idle threshold, self sizing bar columns and panel layout are new. Chris
+Sawyer's copyright notice stays in LICENSE alongside mine, as MIT requires, and
+the README credits the origin.
+
+One of a trio with omarchy-cpu and omarchy-gpu, which share a panel layout and
+controls.
 
 ### Submission checklist
 
