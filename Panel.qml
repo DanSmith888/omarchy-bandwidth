@@ -228,7 +228,9 @@ Panel {
 
   Process {
     id: processProc
-    command: ["bash", "-lc", "ss -H -tanpi 2>/dev/null"]
+    // Capped at the source as well as in the parser: a host with tens of
+    // thousands of sockets should not hand the shell a megabyte of text.
+    command: ["bash", "-lc", "ss -H -tanpi 2>/dev/null | head -c 262144"]
     stdout: StdioCollector {
       id: processOut
       waitForEnd: true
@@ -287,6 +289,7 @@ Panel {
           fontFamily: Style.font.family
           iconComponent: Component {
             Text {
+              textFormat: Text.PlainText
               text: "󰓅"
               color: Color.popups.text
               font.family: Style.font.family
@@ -296,6 +299,8 @@ Panel {
         }
 
         Text {
+
+          textFormat: Text.PlainText
           Layout.fillWidth: true
           text: root.downloadIcon + " " + root.downloadText + "   " + root.uploadIcon + " " + root.uploadText
           color: Qt.darker(Color.popups.text, 1.3)
@@ -308,6 +313,7 @@ Panel {
         // direction: a rate has no ceiling to scale against, so each is
         // scaled to the tallest sample in its own window (ceiling 0).
         Text {
+          textFormat: Text.PlainText
           Layout.fillWidth: true
           text: root.downloadIcon + " download"
           color: Qt.darker(Color.popups.text, 1.4)
@@ -324,6 +330,8 @@ Panel {
         }
 
         Text {
+
+          textFormat: Text.PlainText
           Layout.fillWidth: true
           text: root.uploadIcon + " upload"
           color: Qt.darker(Color.popups.text, 1.4)
@@ -344,6 +352,8 @@ Panel {
         PanelSectionHeader { text: "TOP APPS"; foreground: Color.popups.text }
 
         Text {
+
+          textFormat: Text.PlainText
           Layout.fillWidth: true
           visible: root.networkProcesses.length === 0
           text: "No active connections detected yet."
@@ -360,6 +370,8 @@ Panel {
             spacing: Style.spacing.sm
 
             Text {
+
+              textFormat: Text.PlainText
               Layout.fillWidth: true
               text: modelData.name + " (" + modelData.pid + ")"
               color: Color.popups.text
@@ -369,6 +381,8 @@ Panel {
             }
 
             Text {
+
+              textFormat: Text.PlainText
               text: "↓ " + Model.formatRate(modelData.rxRate, root.unitSystem, root.unitScale) + "  ↑ " + Model.formatRate(modelData.txRate, root.unitSystem, root.unitScale)
               color: Qt.darker(Color.popups.text, 1.2)
               font.family: Style.font.family
@@ -397,6 +411,8 @@ Panel {
         PanelSectionHeader { text: "DISPLAY"; foreground: Color.popups.text }
 
         Text {
+
+          textFormat: Text.PlainText
           Layout.fillWidth: true
           text: "Unit system — applies to readings, speed colors, and the threshold"
           color: Qt.darker(Color.popups.text, 1.3)
@@ -417,6 +433,8 @@ Panel {
         }
 
         Text {
+
+          textFormat: Text.PlainText
           Layout.fillWidth: true
           text: "Scale (Auto picks per reading; a fixed scale never changes)"
           color: Qt.darker(Color.popups.text, 1.3)
@@ -448,6 +466,8 @@ Panel {
         }
 
         Text {
+
+          textFormat: Text.PlainText
           Layout.fillWidth: true
           text: "Refresh interval"
           color: Qt.darker(Color.popups.text, 1.3)
@@ -468,6 +488,8 @@ Panel {
         }
 
         Text {
+
+          textFormat: Text.PlainText
           Layout.fillWidth: true
           text: "Graph history (samples)"
           color: Qt.darker(Color.popups.text, 1.3)
@@ -506,6 +528,8 @@ Panel {
               border.color: Color.accent
 
               Text {
+
+                textFormat: Text.PlainText
                 anchors.centerIn: parent
                 text: modelData.down
                 color: Color.popups.text
@@ -542,6 +566,8 @@ Panel {
               border.color: Color.accent
 
               Text {
+
+                textFormat: Text.PlainText
                 anchors.centerIn: parent
                 text: modelData.up
                 color: Color.popups.text
@@ -563,6 +589,8 @@ Panel {
         PanelSectionHeader { text: "IDLE THRESHOLD"; foreground: Color.popups.text }
 
         Text {
+
+          textFormat: Text.PlainText
           Layout.fillWidth: true
           text: "Hide tiny background traffic: any rate under this shows as \"" + root.idleText + "\" instead of a number. 0 shows everything."
           color: Qt.darker(Color.popups.text, 1.3)
@@ -572,6 +600,8 @@ Panel {
         }
 
         Text {
+
+          textFormat: Text.PlainText
           Layout.fillWidth: true
           text: "Hide readings under"
           color: Qt.darker(Color.popups.text, 1.3)
@@ -612,6 +642,8 @@ Panel {
         PanelSectionHeader { text: "LAYOUT"; foreground: Color.popups.text }
 
         Text {
+
+          textFormat: Text.PlainText
           Layout.fillWidth: true
           text: "Width of each reading in pixels. 0 fits the readings and holds that width so the bar stays still."
           color: Qt.darker(Color.popups.text, 1.3)
@@ -637,6 +669,8 @@ Panel {
         PanelSectionHeader { text: "SPEED COLORS"; foreground: Color.popups.text }
 
         Text {
+
+          textFormat: Text.PlainText
           Layout.fillWidth: true
           text: "Pick a color for each speed band. A reading (arrow, number and unit) takes the color of the band it is currently in; download and upload share these. ∅ keeps the normal bar color."
           color: Qt.darker(Color.popups.text, 1.3)
@@ -646,6 +680,8 @@ Panel {
         }
 
         Text {
+
+          textFormat: Text.PlainText
           text: "Under 1 " + Model.unitLabel(root.unitSystem, "kilo") + "/s"
           color: Qt.darker(Color.popups.text, 1.3)
           font.family: Style.font.family
@@ -669,6 +705,8 @@ Panel {
               border.color: root.byteColor === swatch ? Color.accent : Qt.darker(Color.popups.text, 1.6)
 
               Text {
+
+                textFormat: Text.PlainText
                 visible: swatch === ""
                 anchors.centerIn: parent
                 text: "∅"
@@ -686,6 +724,8 @@ Panel {
         }
 
         Text {
+
+          textFormat: Text.PlainText
           text: "1 " + Model.unitLabel(root.unitSystem, "kilo") + "/s to 1 " + Model.unitLabel(root.unitSystem, "mega") + "/s"
           color: Qt.darker(Color.popups.text, 1.3)
           font.family: Style.font.family
@@ -709,6 +749,8 @@ Panel {
               border.color: root.kiloColor === swatch ? Color.accent : Qt.darker(Color.popups.text, 1.6)
 
               Text {
+
+                textFormat: Text.PlainText
                 visible: swatch === ""
                 anchors.centerIn: parent
                 text: "∅"
@@ -726,6 +768,8 @@ Panel {
         }
 
         Text {
+
+          textFormat: Text.PlainText
           text: "1 " + Model.unitLabel(root.unitSystem, "mega") + "/s to 1 " + Model.unitLabel(root.unitSystem, "giga") + "/s"
           color: Qt.darker(Color.popups.text, 1.3)
           font.family: Style.font.family
@@ -749,6 +793,8 @@ Panel {
               border.color: root.megaColor === swatch ? Color.accent : Qt.darker(Color.popups.text, 1.6)
 
               Text {
+
+                textFormat: Text.PlainText
                 visible: swatch === ""
                 anchors.centerIn: parent
                 text: "∅"
@@ -766,6 +812,8 @@ Panel {
         }
 
         Text {
+
+          textFormat: Text.PlainText
           text: "1 " + Model.unitLabel(root.unitSystem, "giga") + "/s and above"
           color: Qt.darker(Color.popups.text, 1.3)
           font.family: Style.font.family
@@ -789,6 +837,8 @@ Panel {
               border.color: root.gigaColor === swatch ? Color.accent : Qt.darker(Color.popups.text, 1.6)
 
               Text {
+
+                textFormat: Text.PlainText
                 visible: swatch === ""
                 anchors.centerIn: parent
                 text: "∅"
@@ -810,6 +860,8 @@ Panel {
         PanelSectionHeader { text: "ALERT"; foreground: Color.popups.text }
 
         Text {
+
+          textFormat: Text.PlainText
           Layout.fillWidth: true
           text: "Flag heavy traffic: when download or upload reaches its limit, that reading turns the alert color (overriding the speed band color). Set a limit to 0 to turn it off."
           color: Qt.darker(Color.popups.text, 1.3)
@@ -819,6 +871,8 @@ Panel {
         }
 
         Text {
+
+          textFormat: Text.PlainText
           text: "Download at or above"
           color: Qt.darker(Color.popups.text, 1.3)
           font.family: Style.font.family
@@ -853,6 +907,8 @@ Panel {
         }
 
         Text {
+
+          textFormat: Text.PlainText
           text: "Upload at or above"
           color: Qt.darker(Color.popups.text, 1.3)
           font.family: Style.font.family
@@ -887,6 +943,8 @@ Panel {
         }
 
         Text {
+
+          textFormat: Text.PlainText
           text: "Alert color"
           color: Qt.darker(Color.popups.text, 1.3)
           font.family: Style.font.family
@@ -910,6 +968,8 @@ Panel {
               border.color: root.alertColor === swatch ? Color.accent : Qt.darker(Color.popups.text, 1.6)
 
               Text {
+
+                textFormat: Text.PlainText
                 visible: swatch === ""
                 anchors.centerIn: parent
                 text: "∅"

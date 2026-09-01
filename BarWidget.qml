@@ -110,6 +110,8 @@ BarWidget {
       spacing: Style.space(6)
 
       Text {
+
+        textFormat: Text.PlainText
         anchors.verticalCenter: parent.verticalCenter
         visible: root.showIcon
         text: root.markGlyph
@@ -119,6 +121,8 @@ BarWidget {
       }
 
       Text {
+
+        textFormat: Text.PlainText
         anchors.verticalCenter: parent.verticalCenter
         // A pinned width from the LAYOUT section overrides the reserve.
         width: (panelLoader.item && panelLoader.item.speedWidth > 0)
@@ -137,6 +141,8 @@ BarWidget {
       }
 
       Text {
+
+        textFormat: Text.PlainText
         anchors.verticalCenter: parent.verticalCenter
         width: (panelLoader.item && panelLoader.item.speedWidth > 0)
           ? panelLoader.item.speedWidth

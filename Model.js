@@ -119,6 +119,27 @@ function throughputState(previous, next, now) {
   return { prevKey: key, prevRx: rx, prevTx: tx, prevTime: now, downloadRate: downloadRate, uploadRate: uploadRate }
 }
 
+// Every poll is bounded. `ss` output on a busy host runs to thousands of
+// sockets, and this parse happens inside the shell process as often as twice a
+// second, so the line count, the number of processes tracked and the length of
+// any single name all have hard caps.
+var MAX_LINES = 4000
+var MAX_PROCS = 200
+var NAME_MAX = 32
+
+// A process name is whatever a local program chose to call itself, and it ends
+// up in the panel and in the bar's tooltip. The bar renders tooltips with a
+// Text that auto-detects rich text, so markup in a name would be interpreted
+// rather than shown. Keep a conservative printable subset and cap the length:
+// that is the boundary, enforced here rather than trusted downstream.
+function safeName(value) {
+  var out = String(value === undefined || value === null ? "" : value)
+    .replace(/[^A-Za-z0-9 ._+@:-]/g, "")
+    .slice(0, NAME_MAX)
+    .trim()
+  return out === "" ? "?" : out
+}
+
 // Parses `ss -H -tanpi` output into per-process rx/tx byte totals, then
 // diffs against the previous sample to get a rate. Unprivileged: `ss -p`
 // only resolves process info for sockets the current user owns, so this
@@ -130,11 +151,17 @@ function parseNetworkProcesses(raw, previous, now) {
   var rxTotals = {}
   var names = {}
 
-  for (var i = 0; i < lines.length; i++) {
+  var nameCount = 0
+  var limit = Math.min(lines.length, MAX_LINES)
+  for (var i = 0; i < limit; i++) {
     var line = lines[i]
     var userMatch = line.match(/users:\(\("([^"]+)",pid=(\d+)/)
     if (userMatch) {
-      pending = { pid: userMatch[2], name: userMatch[1] }
+      pending = { pid: userMatch[2], name: safeName(userMatch[1]) }
+      if (names[pending.pid] === undefined) {
+        if (nameCount >= MAX_PROCS) { pending = null; continue }
+        nameCount++
+      }
       names[pending.pid] = pending.name
     }
     if (line.indexOf("bytes_") < 0) continue
