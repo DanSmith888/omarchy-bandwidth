@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "id": "dansmith888.network",
+  "name": "Network",
+  "version": "1.0.0",
+  "author": "Daniel Smith",
+  "license": "MIT",
+  "description": "Live download and upload in the Omarchy bar, with per-app bandwidth, history graphs and speed-band colours",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Network",
+    "description": "Download and upload in the bar; history graphs, per-app bandwidth, unit systems and alert limits in the panel.",
+    "category": "Hardware",
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "selectedInterface": "auto",
+      "unitSystem": "bytes",
+      "unitScale": "auto",
+      "pollIntervalMs": 2000,
+      "showIcon": true,
+      "historySamples": 60,
+      "downloadIcon": "\u2193",
+      "uploadIcon": "\u2191",
+      "minThreshold": 0,
+      "minThresholdScale": "base",
+      "speedWidth": 0,
+      "byteColor": "",
+      "kiloColor": "",
+      "megaColor": "",
+      "gigaColor": "",
+      "alertColor": "",
+      "downloadAlertValue": 0,
+      "downloadAlertScale": "mega",
+      "uploadAlertValue": 0,
+      "uploadAlertScale": "mega"
+    },
+    "schema": [
+      {
+        "key": "selectedInterface",
+        "type": "string",
+        "label": "Interface",
+        "defaultValue": "auto",
+        "description": "auto for the default route, all to combine every interface, or a specific name such as enp5s0."
+      },
+      {
+        "key": "unitSystem",
+        "type": "enum",
+        "label": "Unit system",
+        "options": [
+          "bytes",
+          "bits",
+          "binary"
+        ],
+        "defaultValue": "bytes",
+        "description": "Decimal bytes (kB/MB/GB), bits (kb/Mb/Gb) or binary bytes (KiB/MiB/GiB). Drives the readings, the speed colours and the thresholds."
+      },
+      {
+        "key": "unitScale",
+        "type": "enum",
+        "label": "Scale",
+        "options": [
+          "auto",
+          "base",
+          "kilo",
+          "mega",
+          "giga"
+        ],
+        "defaultValue": "auto",
+        "description": "auto picks a magnitude per reading; a fixed scale never changes."
+      },
+      {
+        "key": "pollIntervalMs",
+        "type": "integer",
+        "label": "Refresh interval (ms)",
+        "min": 500,
+        "max": 60000,
+        "step": 500,
+        "defaultValue": 2000
+      },
+      {
+        "key": "showIcon",
+        "type": "boolean",
+        "label": "Show the icon in the bar",
+        "defaultValue": true
+      },
+      {
+        "key": "historySamples",
+        "type": "integer",
+        "label": "Graph history (samples)",
+        "min": 20,
+        "max": 240,
+        "step": 10,
+        "defaultValue": 60
+      },
+      {
+        "key": "speedWidth",
+        "type": "integer",
+        "label": "Reading width (px, 0 = auto)",
+        "min": 0,
+        "max": 300,
+        "step": 2,
+        "defaultValue": 0,
+        "description": "Pin each reading to a fixed width. At 0 each reading reserves the width it has needed, so the bar does not reflow."
+      },
+      {
+        "key": "minThreshold",
+        "type": "integer",
+        "label": "Hide readings under",
+        "min": 0,
+        "max": 100000,
+        "step": 1,
+        "defaultValue": 0
+      },
+      {
+        "key": "minThresholdScale",
+        "type": "enum",
+        "label": "Idle threshold magnitude",
+        "options": [
+          "base",
+          "kilo",
+          "mega",
+          "giga"
+        ],
+        "defaultValue": "base"
+      },
+      {
+        "key": "downloadAlertValue",
+        "type": "integer",
+        "label": "Download alert at or above",
+        "min": 0,
+        "max": 10000,
+        "step": 5,
+        "defaultValue": 0
+      },
+      {
+        "key": "downloadAlertScale",
+        "type": "enum",
+        "label": "Download alert magnitude",
+        "options": [
+          "base",
+          "kilo",
+          "mega",
+          "giga"
+        ],
+        "defaultValue": "mega"
+      },
+      {
+        "key": "uploadAlertValue",
+        "type": "integer",
+        "label": "Upload alert at or above",
+        "min": 0,
+        "max": 10000,
+        "step": 5,
+        "defaultValue": 0
+      },
+      {
+        "key": "uploadAlertScale",
+        "type": "enum",
+        "label": "Upload alert magnitude",
+        "options": [
+          "base",
+          "kilo",
+          "mega",
+          "giga"
+        ],
+        "defaultValue": "mega"
+      }
+    ],
+    "aliases": [
+      "network",
+      "bandwidth",
+      "throughput"
+    ]
+  }
+}
