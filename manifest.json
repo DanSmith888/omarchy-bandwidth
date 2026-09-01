@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "id": "dansmith888.network",
-  "name": "Network",
+  "id": "dansmith888.bandwidth",
+  "name": "Bandwidth",
   "version": "1.0.0",
   "author": "Daniel Smith",
   "license": "MIT",
@@ -13,7 +13,7 @@
     "barWidget": "BarWidget.qml"
   },
   "barWidget": {
-    "displayName": "Network",
+    "displayName": "Bandwidth",
     "description": "Download and upload in the bar; history graphs, per-app bandwidth, unit systems and alert limits in the panel.",
     "category": "Hardware",
     "allowMultiple": false,
@@ -173,8 +173,8 @@
       }
     ],
     "aliases": [
-      "network",
       "bandwidth",
+      "network",
       "throughput"
     ]
   }

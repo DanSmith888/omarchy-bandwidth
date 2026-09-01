@@ -1,4 +1,4 @@
-# Network — Omarchy plugin
+# Bandwidth, an Omarchy plugin
 
 Live download and upload in the Omarchy bar.
 
@@ -7,9 +7,9 @@ holds only what is specific to this repo.
 
 ## Identity
 
-- id / IPC target / `moduleName`: `dansmith888.network`
-- repo: `https://github.com/DanSmith888/omarchy-network.git`
-- installed copy: `~/.config/omarchy/plugins/dansmith888.network`
+- id / IPC target / `moduleName`: `dansmith888.bandwidth`
+- repo: `https://github.com/DanSmith888/omarchy-bandwidth.git`
+- installed copy: `~/.config/omarchy/plugins/dansmith888.bandwidth`
 - kind: `bar-widget`, entry point `BarWidget.qml`
 
 ## Origin

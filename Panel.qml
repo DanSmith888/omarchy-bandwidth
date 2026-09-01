@@ -9,8 +9,8 @@ import "Model.js" as Model
 
 Panel {
   id: root
-  moduleName: "dansmith888.network"
-  ipcTarget: "dansmith888.network"
+  moduleName: "dansmith888.bandwidth"
+  ipcTarget: "dansmith888.bandwidth"
 
   property var anchorItem: null
   property var hostWidget: null

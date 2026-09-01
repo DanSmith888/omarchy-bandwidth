@@ -1,4 +1,4 @@
-# Network
+# Bandwidth
 
 Live download and upload in the [Omarchy](https://omarchy.org/) bar.
 
@@ -14,18 +14,18 @@ panel layout and controls.
 ## Install
 
 ```bash
-omarchy plugin add https://github.com/DanSmith888/omarchy-network.git --enable
+omarchy plugin add https://github.com/DanSmith888/omarchy-bandwidth.git --enable
 ```
 
-Update with `omarchy plugin update dansmith888.network && omarchy restart shell`.
-Remove with `omarchy plugin remove dansmith888.network`.
+Update with `omarchy plugin update dansmith888.bandwidth && omarchy restart shell`.
+Remove with `omarchy plugin remove dansmith888.bandwidth`.
 
 ## Using it
 
 Left click opens the panel. Middle click opens `btop`. Hover for the interface
 and full precision rates.
 
-Bind a hotkey with `omarchy-shell shell toggle dansmith888.network`.
+Bind a hotkey with `omarchy-shell shell toggle dansmith888.bandwidth`.
 
 ## The panel
 

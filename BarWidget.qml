@@ -6,7 +6,7 @@ import "Model.js" as Model
 
 BarWidget {
   id: root
-  moduleName: "dansmith888.network"
+  moduleName: "dansmith888.bandwidth"
 
   readonly property bool opened: panelLoader.item ? panelLoader.item.opened === true : false
   readonly property bool popoutSwitchClosing: panelLoader.item ? panelLoader.item.popoutSwitchClosing === true : false

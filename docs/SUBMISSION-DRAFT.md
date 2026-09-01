@@ -3,12 +3,12 @@ Marketplace submission for https://plugins.omarchy.org — UNSUBMITTED DRAFT.
 Before submitting: push the repo and tag v1.0.0, strip this comment, then:
 
   gh issue create --repo HANCORE-linux/omarchy-plugin-marketplace \
-    --title "[Plugin]: Network" --body-file docs/SUBMISSION-DRAFT.md
+    --title "[Plugin]: Bandwidth" --body-file docs/SUBMISSION-DRAFT.md
 -->
 
 ### Repository URL
 
-https://github.com/DanSmith888/omarchy-network
+https://github.com/DanSmith888/omarchy-bandwidth
 
 ### Category
 
