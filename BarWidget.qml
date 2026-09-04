@@ -115,7 +115,7 @@ BarWidget {
         anchors.verticalCenter: parent.verticalCenter
         visible: root.showIcon
         text: root.markGlyph
-        color: root.bar ? root.bar.foreground : Color.foreground
+        color: root.bar ? root.bar.barForeground : Color.foreground
         font.family: root.bar ? root.bar.fontFamily : Style.font.family
         font.pixelSize: Style.font.body
       }
@@ -134,7 +134,7 @@ BarWidget {
         text: root.downloadLabel
         color: {
           var c = panelLoader.item ? panelLoader.item.downloadTierColor : ""
-          return c && c !== "" ? c : (root.bar ? root.bar.foreground : Color.foreground)
+          return c && c !== "" ? c : (root.bar ? root.bar.barForeground : Color.foreground)
         }
         font.family: root.bar ? root.bar.fontFamily : Style.font.family
         font.pixelSize: Style.font.body
@@ -153,7 +153,7 @@ BarWidget {
         text: root.uploadLabel
         color: {
           var c = panelLoader.item ? panelLoader.item.uploadTierColor : ""
-          return c && c !== "" ? c : (root.bar ? root.bar.foreground : Color.foreground)
+          return c && c !== "" ? c : (root.bar ? root.bar.barForeground : Color.foreground)
         }
         font.family: root.bar ? root.bar.fontFamily : Style.font.family
         font.pixelSize: Style.font.body
