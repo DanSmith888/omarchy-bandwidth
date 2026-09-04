@@ -1,17 +1,98 @@
-// Shell one-liner run every poll: prints the default-route interface, then
-// byte counters for every non-loopback interface. No `${}` is used anywhere
-// in here so it's safe to embed as a QML template literal (which would try
-// to interpolate `${...}` itself).
-function pollScript() {
-  return "auto=$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if ($i==\"dev\"){print $(i+1); exit}}')\n"
-    + "echo \"AUTO $auto\"\n"
-    + "for d in /sys/class/net/*; do\n"
-    + "  i=$(basename \"$d\")\n"
-    + "  [ \"$i\" = lo ] && continue\n"
-    + "  rx=$(cat \"$d/statistics/rx_bytes\" 2>/dev/null || echo 0)\n"
-    + "  tx=$(cat \"$d/statistics/tx_bytes\" 2>/dev/null || echo 0)\n"
-    + "  echo \"IFACE $i $rx $tx\"\n"
-    + "done\n"
+// Bounded procfs parsers. Nothing here runs a shell: the panel reads
+// /proc/net/dev and /proc/net/route in process, so there is no PATH lookup,
+// no inherited environment and no child to outlive us.
+
+var MAX_DEV_LINES = 256      // interfaces considered per poll
+var MAX_ROUTE_LINES = 512    // route table rows considered per poll
+var MAX_THEME_LINES = 512    // colours.toml lines considered per load
+var IFACE_NAME_MAX = 24      // kernel caps at IFNAMSIZ 16, this is slack
+
+// Interface names come from the kernel, but they are still strings we did
+// not author, so they get the same treatment as process names.
+function safeIface(name) {
+  return String(name || "")
+    .replace(/[\x00-\x1f\x7f]/g, "")
+    .replace(/[^A-Za-z0-9._:@-]/g, "")
+    .slice(0, IFACE_NAME_MAX)
+}
+
+// /proc/net/dev: two header lines, then "  iface: rx_bytes ... tx_bytes ...".
+// Field 0 after the colon is received bytes, field 8 is transmitted.
+function parseNetDev(raw) {
+  var lines = String(raw || "").split("\n")
+  var limit = Math.min(lines.length, MAX_DEV_LINES)
+  var ifaces = {}
+  var list = []
+
+  for (var i = 0; i < limit; i++) {
+    var line = lines[i]
+    var colon = line.indexOf(":")
+    if (colon < 0) continue
+    var name = safeIface(line.slice(0, colon).trim())
+    if (!name || name === "lo") continue
+    var fields = line.slice(colon + 1).trim().split(/\s+/)
+    if (fields.length < 9) continue
+    var rx = parseFloat(fields[0])
+    var tx = parseFloat(fields[8])
+    if (!isFinite(rx) || !isFinite(tx)) continue
+    ifaces[name] = { rx: rx, tx: tx }
+    list.push(name)
+  }
+
+  list.sort()
+  return { ifaces: ifaces, list: list }
+}
+
+// /proc/net/route: the default route is the row whose destination is all
+// zeroes. Lowest metric wins, matching what the kernel would pick.
+function parseDefaultRoute(raw) {
+  var lines = String(raw || "").split("\n")
+  var limit = Math.min(lines.length, MAX_ROUTE_LINES)
+  var best = ""
+  var bestMetric = Infinity
+
+  for (var i = 1; i < limit; i++) {
+    var parts = lines[i].trim().split(/\s+/)
+    if (parts.length < 7) continue
+    if (parts[1] !== "00000000") continue
+    var metric = parseInt(parts[6], 10)
+    if (!isFinite(metric)) metric = 0
+    if (metric >= bestMetric) continue
+    var name = safeIface(parts[0])
+    if (!name) continue
+    best = name
+    bestMetric = metric
+  }
+
+  return best
+}
+
+// Both files arrive from one bounded read, separated by head's "==> path <=="
+// banners. Splitting here keeps the two parsers above independently testable.
+function splitSections(raw) {
+  var out = {}
+  var current = ""
+  var lines = String(raw || "").split("\n")
+  var limit = Math.min(lines.length, MAX_DEV_LINES + MAX_ROUTE_LINES + 8)
+  for (var i = 0; i < limit; i++) {
+    var line = lines[i]
+    var banner = line.match(/^==>\s+(\S+)\s+<==$/)
+    if (banner) { current = banner[1]; out[current] = []; continue }
+    if (current) out[current].push(line)
+  }
+  for (var key in out) out[key] = out[key].join("\n")
+  return out
+}
+
+// The two reads together, in the shape resolveActive already expects.
+function buildSample(raw) {
+  var sections = splitSections(raw)
+  var dev = parseNetDev(sections["/proc/net/dev"] || "")
+  return {
+    auto: parseDefaultRoute(sections["/proc/net/route"] || ""),
+    ifaces: dev.ifaces,
+    list: dev.list
+  }
 }
 
 // Parses the small, stable subset of theme/colors.toml keys every Omarchy
@@ -23,7 +104,8 @@ function parseThemeColors(raw) {
   var keys = ["accent", "muted", "foreground", "red", "yellow", "orange", "green", "cyan", "blue", "magenta"]
   var out = {}
   var lines = String(raw || "").split("\n")
-  for (var i = 0; i < lines.length; i++) {
+  var limit = Math.min(lines.length, MAX_THEME_LINES)
+  for (var i = 0; i < limit; i++) {
     var match = lines[i].match(/^\s*([A-Za-z0-9_-]+)\s*=\s*["']?(#[0-9A-Fa-f]{6})/)
     if (!match) continue
     if (keys.indexOf(match[1]) !== -1) out[match[1]] = match[2]
@@ -49,29 +131,6 @@ function themePalette(theme) {
 }
 
 // raw -> { auto: "eth0", ifaces: { eth0: {rx,tx}, ... }, list: [names...] }
-function parseSample(raw) {
-  var lines = String(raw || "").split("\n")
-  var auto = ""
-  var ifaces = {}
-  var list = []
-
-  for (var i = 0; i < lines.length; i++) {
-    var line = lines[i].trim()
-    if (!line) continue
-    var parts = line.split(/\s+/)
-    if (parts[0] === "AUTO") {
-      auto = parts[1] || ""
-    } else if (parts[0] === "IFACE" && parts[1]) {
-      var name = parts[1]
-      ifaces[name] = { rx: parseFloat(parts[2] || "0"), tx: parseFloat(parts[3] || "0") }
-      list.push(name)
-    }
-  }
-
-  list.sort()
-  return { auto: auto, ifaces: ifaces, list: list }
-}
-
 // Resolves the configured selection ("auto" | "all" | <iface name>) against
 // a parsed sample to a single { rx, tx, label } reading.
 function resolveActive(sample, selected) {

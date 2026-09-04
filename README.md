@@ -73,8 +73,11 @@ column.
 ## What runs, and as whom
 
 Omarchy plugins run inside the shell process, unsandboxed, as your user. This
-one reads `/proc/net/dev` and runs `ss`. No daemon, no root, no network of its
-own, and nothing written outside its own folder.
+one reads `/proc/net/dev` and `/proc/net/route`, and runs `ss` while the panel
+is open. No shell is involved: each collector is executed directly by absolute
+path with a scrubbed environment, a byte cap and a watchdog that kills it if it
+hangs. No daemon, no root, no network of its own, and nothing written outside
+its own folder.
 
 ## Credits
 

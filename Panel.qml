@@ -180,10 +180,15 @@ Panel {
   function setUnitScale(value) { persistSettings({ unitScale: Model.normalizeScale(value) }) }
   function setPollIntervalMs(value) { persistSettings({ pollIntervalMs: Math.max(500, Math.round(Number(value) || 2000)) }) }
 
-  function refreshNow() { pollProc.running = true }
+  function refreshNow() {
+    if (pollProc.running) return
+    root.pollLines = []
+    root.pollBytes = 0
+    pollProc.running = true
+  }
 
   function handleSample(raw) {
-    var sample = Model.parseSample(raw)
+    var sample = Model.buildSample(raw)
     root.interfaceList = sample.list
     var active = Model.resolveActive(sample, root.selectedInterface)
     root.resolvedLabel = active.label
@@ -196,7 +201,12 @@ Panel {
     root.uploadHistory = Model.pushHistory(root.uploadHistory, state.uploadRate, root.historySamples)
   }
 
-  function refreshProcessesNow() { if (root.opened) processProc.running = true }
+  function refreshProcessesNow() {
+    if (!root.opened || processProc.running) return
+    root.ssLines = []
+    root.ssBytes = 0
+    processProc.running = true
+  }
 
   function handleProcessSample(raw) {
     var now = Date.now()
@@ -205,7 +215,7 @@ Panel {
     root.networkProcesses = state.list
   }
 
-  function refreshThemeColorsNow() { themeColorsProc.running = true }
+  function refreshThemeColorsNow() { themeColorsFile.reload() }
 
   function handleThemeColorsSample(raw) {
     root.themeColors = Model.parseThemeColors(raw)
@@ -226,37 +236,146 @@ Panel {
     }
   }
 
-  Process {
-    id: processProc
-    // Capped at the source as well as in the parser: a host with tens of
-    // thousands of sockets should not hand the shell a megabyte of text.
-    command: ["bash", "-lc", "ss -H -tanpi 2>/dev/null | head -c 262144"]
-    stdout: StdioCollector {
-      id: processOut
-      waitForEnd: true
-      onStreamFinished: root.handleProcessSample(text)
-    }
+  // ---- collectors ---------------------------------------------------
+  //
+  // Throughput and the default route are plain file reads, done in process
+  // by FileView: no shell, no PATH lookup, no inherited environment and no
+  // child that can outlive the panel. Only per app attribution needs a real
+  // program, and that one runs `ss` directly with a scrubbed environment,
+  // an absolute path, a byte cap applied as output arrives, and a watchdog.
+
+  readonly property string themeColorsPath: (Quickshell.env("HOME") || "")
+    + "/.local/state/omarchy/current/theme/colors.toml"
+  readonly property string ssPath: "/usr/bin/ss"
+  readonly property string headPath: "/usr/bin/head"
+
+  // A collector inherits the shell's environment unless told otherwise, and
+  // that is what turns PATH and the loader tunables into an injection path.
+  readonly property var collectorEnvironment: ({ "PATH": "/usr/bin:/bin", "LC_ALL": "C" })
+
+  readonly property int maxSsBytes: 262144
+  readonly property int maxSsLines: 4000
+  readonly property int maxPollBytes: 65536
+  readonly property int maxPollLines: 512
+  readonly property int watchdogSeconds: 8
+  readonly property int killGraceSeconds: 3
+
+  property var ssLines: []
+  property int ssBytes: 0
+  property var pollLines: []
+  property int pollBytes: 0
+  property var procStartedAt: ({})
+  property var procTermedAt: ({})
+
+  function watchedProcs() { return { pollProc: pollProc, processProc: processProc } }
+
+  function noteStarted(key, isRunning) {
+    var a = root.procStartedAt, b = root.procTermedAt
+    if (isRunning) { a[key] = Date.now(); delete b[key] }
+    else { delete a[key]; delete b[key] }
+    root.procStartedAt = a
+    root.procTermedAt = b
   }
 
-  Process {
-    id: themeColorsProc
-    command: ["bash", "-lc", "cat ~/.local/state/omarchy/current/theme/colors.toml 2>/dev/null"]
-    stdout: StdioCollector {
-      id: themeColorsOut
-      waitForEnd: true
-      onStreamFinished: root.handleThemeColorsSample(text)
+  function hardKill(proc) {
+    if (proc.running) proc.signal(9)
+    proc.running = false
+  }
+
+  function reapAll() {
+    var procs = root.watchedProcs()
+    for (var key in procs) if (procs[key].running) root.hardKill(procs[key])
+  }
+
+  // Capping as each line arrives is the point: a collector that reads the
+  // whole stream first has already spent the memory by the time it measures.
+  function takeSsLine(line) {
+    if (root.ssLines.length >= root.maxSsLines || root.ssBytes >= root.maxSsBytes) {
+      if (processProc.running) processProc.running = false
+      return
     }
+    var text = String(line)
+    root.ssBytes += text.length + 1
+    root.ssLines.push(text)
   }
 
   Process {
     id: pollProc
-    command: ["bash", "-lc", Model.pollScript()]
-    stdout: StdioCollector {
-      id: pollOut
-      waitForEnd: true
-      onStreamFinished: root.handleSample(text)
+    // One exec, no shell, absolute paths, and the byte cap is applied by the
+    // only program in the chain rather than by a pipe further downstream.
+    command: [root.headPath, "-c", String(root.maxPollBytes),
+              "/proc/net/dev", "/proc/net/route"]
+    clearEnvironment: true
+    environment: root.collectorEnvironment
+    stdout: SplitParser {
+      splitMarker: "\n"
+      onRead: function (line) { root.takePollLine(line) }
+    }
+    onRunningChanged: root.noteStarted("pollProc", running)
+    onExited: root.handleSample(root.pollLines.join("\n"))
+  }
+
+  function takePollLine(line) {
+    if (root.pollLines.length >= root.maxPollLines || root.pollBytes >= root.maxPollBytes) {
+      if (pollProc.running) pollProc.running = false
+      return
+    }
+    var text = String(line)
+    root.pollBytes += text.length + 1
+    root.pollLines.push(text)
+  }
+
+  FileView {
+    id: themeColorsFile
+    path: root.themeColorsPath
+    printErrors: false
+    onLoaded: root.handleThemeColorsSample(themeColorsFile.text())
+  }
+
+  Process {
+    id: processProc
+    command: [root.ssPath, "-H", "-tanpi"]
+    clearEnvironment: true
+    environment: root.collectorEnvironment
+    stdout: SplitParser {
+      splitMarker: "\n"
+      onRead: function (line) { root.takeSsLine(line) }
+    }
+    onRunningChanged: root.noteStarted("processProc", running)
+    onExited: root.handleProcessSample(root.ssLines.join("\n"))
+  }
+
+  // One watchdog over every process we own. Age is measured rather than
+  // assumed, so a healthy read is never cancelled by a tick landing on it:
+  // ask it to stop once it is genuinely old, SIGKILL only if it ignores that.
+  Timer {
+    interval: 1000
+    repeat: true
+    running: true
+    onTriggered: {
+      var now = Date.now()
+      var procs = root.watchedProcs()
+      for (var key in procs) {
+        var proc = procs[key]
+        if (!proc.running) continue
+        var started = root.procStartedAt[key]
+        if (started === undefined) { root.noteStarted(key, true); continue }
+        var termed = root.procTermedAt[key]
+        if (termed === undefined) {
+          if (now - started > root.watchdogSeconds * 1000) {
+            proc.running = false
+            var m = root.procTermedAt
+            m[key] = now
+            root.procTermedAt = m
+          }
+        } else if (now - termed > root.killGraceSeconds * 1000) {
+          root.hardKill(proc)
+        }
+      }
     }
   }
+
+  Component.onDestruction: root.reapAll()
 
   PopupCard {
     id: popup
