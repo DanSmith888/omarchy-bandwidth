@@ -1,6 +1,6 @@
 # Bandwidth
 
-Live download and upload in the [Omarchy](https://omarchy.org/) bar.
+Live download and upload in the [Omarchy](https://omarchy.org/) bar. Pairs with the CPU and GPU widgets.
 
 ![Bar](docs/bar.png)
 
@@ -78,6 +78,13 @@ is open. No shell is involved: each collector is executed directly by absolute
 path with a scrubbed environment, a byte cap and a watchdog that kills it if it
 hangs. No daemon, no root, no network of its own, and nothing written outside
 its own folder.
+
+## Related
+
+I built this alongside two companions that share the same panel style:
+[CPU](https://github.com/DanSmith888/omarchy-cpu) (load, per-core activity, temperature and clock) and
+[GPU](https://github.com/DanSmith888/omarchy-gpu) (load, VRAM, temperature and power).
+Each installs the same way and they sit well side by side in the bar.
 
 ## Credits
 

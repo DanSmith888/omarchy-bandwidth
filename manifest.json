@@ -5,7 +5,7 @@
   "version": "1.0.1",
   "author": "Daniel Smith",
   "license": "MIT",
-  "description": "Live download and upload in the Omarchy bar, with per-app bandwidth, history graphs and speed-band colours",
+  "description": "Live download and upload in the Omarchy bar, with per-app bandwidth, history graphs and speed-band colours. Pairs with my CPU and GPU plugins: click @DanSmith888 to see all three",
   "kinds": [
     "bar-widget"
   ],
